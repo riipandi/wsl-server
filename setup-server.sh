@@ -56,7 +56,7 @@ crudini --set /etc/php/7.3/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9073'
 # Configuring Nginx
 curl -L# https://2ton.com.au/dhparam/4096 -o /etc/ssl/certs/dhparam-4096.pem
 rm -fr /etc/nginx ; cp -r $PWD/nginx /etc/
-cp /etc/nginx/manifest/default.tpl /var/www/html/index.php
+cp /etc/nginx/manifest/default.tpl /var/www/index.php
 service nginx --full-restart
 
 # Redis Server
@@ -73,6 +73,33 @@ apt update && apt install nodejs yarn
 
 # Golang + Buffalo Framework
 bash <(curl -sLo- git.io/fh3dZ) 1.11.4
+
+# phpMyAdmin
+PMA_DIR="/var/www/myadmin"
+
+if [ ! -d $PMA_DIR ]; then
+curl -fsSL https://phpmyadmin.net/downloads/phpMyAdmin-latest-english.zip | bsdtar -xvf-
+mv $PWD/phpMyAdmin*-english $PMA_DIR
+
+cat > $PMA_DIR/config.inc.php <<EOF
+<?php
+\$cfg['blowfish_secret'] = '`openssl rand -hex 16`';
+\$i = 0; \$i++;
+\$cfg['Servers'][\$i]['auth_type']       = 'cookie';
+\$cfg['Servers'][\$i]['host']            = '127.0.0.1';
+\$cfg['Servers'][\$i]['connect_type']    = 'tcp';
+\$cfg['Servers'][\$i]['AllowNoPassword'] = false;
+\$cfg['Servers'][\$i]['hide_db']         = '^(information_schema|performance_schema|mysql|phpmyadmin|sys)\$';
+\$cfg['MaxRows']                         = 100;
+\$cfg['SendErrorReports']                = 'never';
+\$cfg['ShowDatabasesNavigationAsTree']   = false;
+EOF
+
+chmod 0755 $PMA_DIR
+find $PMA_DIR/. -type d -exec chmod 0777 {} \;
+find $PMA_DIR/. -type f -exec chmod 0644 {} \;
+chown -R www-data: $PMA_DIR
+fi
 
 # Development libraries: non-root user
 yarn global add expo-cli electron firebase-tools serve git-upload vsce gatsby next-express-bootstrap-boilerplate
