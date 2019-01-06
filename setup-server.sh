@@ -28,14 +28,14 @@ apt-key adv --recv-keys --keyserver keyserver.ubuntu.com C74CD1D8 && apt update
 
 debconf-set-selections <<< "mysql-server mysql-server/root_password password secret"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password secret"
-apt install mariadb-server mariadb-client
+apt install mariadb-server mariadb-client mycli
 mysqladmin -uroot -psecret password "secret"
 service mysql --full-restart
 
 # PostgreSQL
 echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-apt update ; apt -y install postgresql-{11,client-11}
+apt update ; apt install postgresql-{11,client-11} pgcli
 service postgresql --full-restart
 sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'secret'"
 
