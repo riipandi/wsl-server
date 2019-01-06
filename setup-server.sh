@@ -46,7 +46,8 @@ apt-key adv --recv-keys --keyserver keyserver.ubuntu.com E5267A6C && apt update
 
 apt install php5.6 php{5.6,7.2,7.3}-{bcmath,cgi,cli,common,curl,fpm,gd,gmp,imap,intl,json,mbstring,mysql,opcache,pgsql,readline,sqlite3,xml,xmlrpc,zip,zip}
 apt install php7.3-imagick php-pear gettext gamin mcrypt imagemagick nginx
-apt install python-{pip,pip-whl,virtualenv,dev} python3-virtualenv virtualenv
+apt install {python,python3}-{dev,pip,virtualenv} python-pip-whl virtualenv
+pip install pipenv ; pip3 install pipenv
 
 find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display_errors" "Off"' {} \;
 crudini --set /etc/php/5.6/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9056'

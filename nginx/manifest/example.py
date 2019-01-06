@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+#
+# Run:
+#   gunicorn -b 127.0.0.1:8000 app:api
+#
+# Or, if using pipenv:
+#   pipenv run gunicorn -b 127.0.0.1:8000 app:api
+#
 
 from falcon import falcon
 
