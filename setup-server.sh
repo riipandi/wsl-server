@@ -146,3 +146,15 @@ chown -R www-data: /var/www/pgadmin
 # Development libraries: non-root user
 yarn global add expo-cli electron firebase-tools serve git-upload vsce gatsby next-express-bootstrap-boilerplate
 composer global require hirak/prestissimo friendsofphp/php-cs-fixer laravel/installer wp-cli/wp-cli
+
+# Add Yarn and Composer to path
+if ! grep -q 'Composer' $HOME/.bashrc ; then
+    touch "$HOME/.bashrc"
+    {
+        echo ''
+        echo '# Composer and Yarn'
+        echo 'export PATH=$PATH:$HOME/.config/composer/vendor/bin:$HOME/.yarn/bin'
+        echo ''
+    } >> "$HOME/.bashrc"
+    source "$HOME/.bashrc"
+fi
