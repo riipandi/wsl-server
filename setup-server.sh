@@ -49,10 +49,11 @@ apt install php7.3-imagick php-pear composer gettext gamin mcrypt imagemagick ng
 apt install {python,python3}-{dev,pip,virtualenv} python-pip-whl virtualenv
 pip install pipenv ; pip3 install pipenv
 
-find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display_errors" "Off"' {} \;
+find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display_errors" "On"' {} \;
 crudini --set /etc/php/5.6/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9056'
 crudini --set /etc/php/7.2/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9072'
 crudini --set /etc/php/7.3/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9073'
+service php{5.6,7.2,7.3}-fpm --full-restart
 
 # Configuring Nginx
 curl -L# https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt -o /etc/ssl/certs/chain.pem
@@ -77,13 +78,11 @@ apt update && apt install nodejs yarn
 bash <(curl -sLo- git.io/fh3dZ) 1.11.4
 
 # phpMyAdmin
-PMA_DIR="/var/www/myadmin"
-
-if [ ! -d $PMA_DIR ]; then
+if [ ! -d /var/www/myadmin ]; then
 curl -fsSL https://phpmyadmin.net/downloads/phpMyAdmin-latest-english.zip | bsdtar -xvf-
-mv $PWD/phpMyAdmin*-english $PMA_DIR
+mv $PWD/phpMyAdmin*-english /var/www/myadmin
 
-cat > $PMA_DIR/config.inc.php <<EOF
+cat > /var/www/myadmin/config.inc.php <<EOF
 <?php
 \$cfg['blowfish_secret'] = '`openssl rand -hex 16`';
 \$i = 0; \$i++;
@@ -97,10 +96,10 @@ cat > $PMA_DIR/config.inc.php <<EOF
 \$cfg['ShowDatabasesNavigationAsTree']   = false;
 EOF
 
-chmod 0755 $PMA_DIR
-find $PMA_DIR/. -type d -exec chmod 0777 {} \;
-find $PMA_DIR/. -type f -exec chmod 0644 {} \;
-chown -R www-data: $PMA_DIR
+chmod 0755 /var/www/myadmin
+find /var/www/myadmin/. -type d -exec chmod 0777 {} \;
+find /var/www/myadmin/. -type f -exec chmod 0644 {} \;
+chown -R www-data: /var/www/myadmin
 fi
 
 # phpPgAdmin
@@ -136,7 +135,6 @@ cat > /var/www/pgadmin/conf/config.inc.php <<EOF
 \$conf['ajax_refresh']                  = 3;
 \$conf['plugins']                       = array();
 \$conf['version']                       = 19;
-?>
 EOF
 
 chmod 0755 /var/www/pgadmin
