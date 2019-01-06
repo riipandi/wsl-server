@@ -109,7 +109,7 @@ curl -fsSL https://github.com/phppgadmin/phppgadmin/archive/$latest_release.zip 
 mv /tmp/phppgadmin-$latest_release /var/www/pgadmin
 
 cat > /var/www/pgadmin/conf/config.inc.php <<EOF
-<?php
+<?php @ini_set('display_errors', '0');
 \$conf['servers'][0]['desc']            = 'PostgreSQL';
 \$conf['servers'][0]['host']            = '127.0.0.1';
 \$conf['servers'][0]['port']            = 5432;
