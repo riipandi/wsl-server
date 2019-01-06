@@ -55,6 +55,7 @@ crudini --set /etc/php/7.2/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9072'
 crudini --set /etc/php/7.3/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9073'
 
 # Configuring Nginx
+curl -L# https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt -o /etc/ssl/certs/chain.pem
 curl -L# https://2ton.com.au/dhparam/4096 -o /etc/ssl/certs/dhparam-4096.pem
 rm -fr /etc/nginx ; cp -r $PWD/nginx /etc/
 cp /etc/nginx/manifest/default.tpl /var/www/index.php
