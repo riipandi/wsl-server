@@ -4,10 +4,11 @@ set -e
 if [[ ! $EUID -ne 0 ]]; then echo -e 'This script must be run as non-root user' ; exit 1 ; fi
 
 # Set Git user information
-read -ep "Your Full Name     : " fullname
-read -ep "Your Email Address : " mailaddr
+read -ep "Your Full Name     ? " fullname
+read -ep "Your Email Address ? " mailaddr
 git config --global user.name  "$fullname"
 git config --global user.email "$mailaddr"
+git config --global core.autocrlf input
 
 echo "Instaling Composer packages..."
 composer global require hirak/prestissimo friendsofphp/php-cs-fixer laravel/installer wp-cli/wp-cli

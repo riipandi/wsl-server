@@ -13,12 +13,6 @@ cat $PWD/sources.list > /etc/apt/sources.list ; apt update ; apt full-upgrade -y
 apt install -y apt-transport-https debconf-utils curl git crudini pwgen s3cmd binutils
 apt install -y dnsutils zip unzip bsdtar rsync screenfetch
 
-# Set Git user information
-read -ep "Your Full Name     ? " fullname
-read -ep "Your Email Address ? " mailaddr
-git config --global user.name  "$fullname"
-git config --global user.email "$mailaddr"
-
 # Basic configuration
 perl -pi -e 's#(.*sudo.*ALL=)(.*)#${1}(ALL) NOPASSWD:ALL#' /etc/sudoers
 sed -i "s|\("^PubkeyAuthentication" * *\).*|\1yes|" /etc/ssh/sshd_config
