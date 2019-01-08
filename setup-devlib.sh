@@ -9,16 +9,11 @@ read -ep "Your Email Address : " mailaddr
 git config --global user.name  "$fullname"
 git config --global user.email "$mailaddr"
 
-echo "Instaling NPM packages..."
-yarn global add expo-cli electron firebase-tools serve git-upload vsce
-yarn global add gatsby next-express-bootstrap-boilerplate
-
 echo "Instaling Composer packages..."
 composer global require hirak/prestissimo friendsofphp/php-cs-fixer laravel/installer wp-cli/wp-cli
 
-echo "Configuring environment variables..."
-
 # Add Yarn and Composer to path
+echo "Configuring environment variables..."
 if ! grep -q 'Composer' $HOME/.bashrc ; then
     touch "$HOME/.bashrc"
     {
@@ -29,6 +24,9 @@ if ! grep -q 'Composer' $HOME/.bashrc ; then
     } >> "$HOME/.bashrc"
     source "$HOME/.bashrc"
 fi
+
+echo "Instaling NPM packages..."
+yarn global add expo-cli electron firebase-tools serve git-upload vsce gatsby next-express-bootstrap-boilerplate
 
 # Add Golang to path
 GOROOT="/usr/local/go"
