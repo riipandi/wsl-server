@@ -9,7 +9,13 @@ PWD=$(dirname "$(readlink -f "$0")")
 if [[ $EUID -ne 0 ]]; then echo -e 'This script must be run as root' ; exit 1 ; fi
 
 # Development packages
-apt install apt-transport-https curl git crudini pwgen s3cmd binutils dnsutils zip unzip bsdtar rsync screenfetch
+apt install -y apt-transport-https curl git crudini pwgen s3cmd binutils dnsutils zip unzip bsdtar rsync screenfetch
+
+# Set Git user information
+read -ep "Your Full Name     ? " fullname
+read -ep "Your Email Address ? " mailaddr
+git config --global user.name  "$fullname"
+git config --global user.email "$mailaddr"
 
 # Basic configuration
 perl -pi -e 's#(.*sudo.*ALL=)(.*)#${1}(ALL) NOPASSWD:ALL#' /etc/sudoers
@@ -19,7 +25,7 @@ sed -i "s|\("^UsePrivilegeSeparation" * *\).*|\1yes|" /etc/ssh/sshd_config
 sed -i "s|\("^ListenAddress" * *\).*|\10.0.0.0|" /etc/ssh/sshd_config
 sed -i "s|\("^PermitRootLogin" * *\).*|\1no|" /etc/ssh/sshd_config
 sed -i "s/[#]*ListenAddress/ListenAddress/" /etc/ssh/sshd_config
-sed -i "s/[#]*Port [0-9]*/Port 1022/" /etc/ssh/sshd_config
+sed -i "s/[#]*Port [0-9]*/Port 22/" /etc/ssh/sshd_config
 service ssh --full-restart
 
 # Install MariaDB
@@ -28,15 +34,13 @@ apt-key adv --recv-keys --keyserver keyserver.ubuntu.com C74CD1D8 && apt update
 
 debconf-set-selections <<< "mysql-server mysql-server/root_password password secret"
 debconf-set-selections <<< "mysql-server mysql-server/root_password_again password secret"
-apt install mariadb-server mariadb-client mycli
-mysqladmin -uroot -psecret password "secret"
+apt install -y mariadb-server mariadb-client mycli
 service mysql --full-restart
 
 # PostgreSQL
 echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-apt update ; apt install postgresql-{11,client-11} pgcli
-service postgresql --full-restart
+curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && apt update
+apt install -y postgresql-{11,client-11} pgcli ; service postgresql --full-restart
 sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'secret'"
 
 # Install Nginx + PHP-FPM + Python3
@@ -44,44 +48,36 @@ echo "deb http://ppa.launchpad.net/ondrej/nginx/ubuntu `lsb_release -cs` main" >
 echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/sury-php.list
 apt-key adv --recv-keys --keyserver keyserver.ubuntu.com E5267A6C && apt update
 
-apt install php5.6 php{5.6,7.2,7.3}-{bcmath,cgi,cli,common,curl,fpm,gd,gmp,imap,intl,json,mbstring,mysql,opcache,pgsql,readline,sqlite3,xml,xmlrpc,zip,zip}
-apt install php7.3-imagick php-pear composer gettext gamin mcrypt imagemagick nginx
-apt install {python,python3}-{dev,pip,virtualenv} python-pip-whl virtualenv
+apt install -y php5.6 php{5.6,7.2,7.3}-{bcmath,cgi,cli,common,curl,fpm,gd,gmp,imap,intl,json,mbstring,mysql,opcache,pgsql,readline,sqlite3,xml,xmlrpc,zip,zip}
+apt install -y php7.3-imagick php-pear composer gettext gamin mcrypt imagemagick nginx {python,python3}-{dev,pip,virtualenv} python-pip-whl virtualenv redis-server
 pip install pipenv ; pip3 install pipenv
+service redis-server --full-restart
 
 find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display_errors" "On"' {} \;
-crudini --set /etc/php/5.6/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9056'
-crudini --set /etc/php/7.2/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9072'
-crudini --set /etc/php/7.3/fpm/php-fpm.conf  'www' 'listen' '127.0.0.1:9073'
-service php{5.6,7.2,7.3}-fpm --full-restart
+crudini --set /etc/php/5.6/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9056'
+crudini --set /etc/php/7.2/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9072'
+crudini --set /etc/php/7.3/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9073'
+service php5.6-fpm restart ; service php7.2-fpm restart ; service php7.3-fpm restart
 
 # Configuring Nginx
-curl -L# https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt -o /etc/ssl/certs/chain.pem
-curl -L# https://2ton.com.au/dhparam/4096 -o /etc/ssl/certs/dhparam-4096.pem
-rm -fr /etc/nginx ; cp -r $PWD/nginx /etc/
-cp /etc/nginx/manifest/default.tpl /var/www/index.php
-service nginx --full-restart
-
-# Redis Server
-apt install redis-server
-service redis-server --full-restart
+if [ ! -d /mnt/d/Workspace/Webdir ]; then mkdir -p /mnt/d/Workspace/Webdir ; fi
+curl -sL https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt -o /etc/ssl/certs/chain.pem
+curl -sL https://2ton.com.au/dhparam/4096 -o /etc/ssl/certs/dhparam-4096.pem
+rm -fr /etc/nginx ; cp -r $PWD/nginx /etc/ ; service nginx --full-restart
+cp /etc/nginx/manifest/default.php /var/www/index.php
 
 # Nodejs + Yarn
 echo "deb https://deb.nodesource.com/node_10.x `lsb_release -cs` main" > /etc/apt/sources.list.d/nodejs.list
 curl -sS https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 
 echo 'deb https://dl.yarnpkg.com/debian/ stable main' > /etc/apt/sources.list.d/yarn.list
-curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-apt update && apt install nodejs yarn
-
-# Golang + Buffalo Framework
-bash <(curl -sLo- git.io/fh3dZ) 1.11.4
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+apt update && apt install -y nodejs yarn
 
 # phpMyAdmin
-if [ ! -d /var/www/myadmin ]; then
+if [ -d /var/www/myadmin ]; then rm -fr /var/www/myadmin ; fi
 curl -fsSL https://phpmyadmin.net/downloads/phpMyAdmin-latest-english.zip | bsdtar -xvf-
 mv $PWD/phpMyAdmin*-english /var/www/myadmin
-
 cat > /var/www/myadmin/config.inc.php <<EOF
 <?php
 \$cfg['blowfish_secret'] = '`openssl rand -hex 16`';
@@ -95,19 +91,17 @@ cat > /var/www/myadmin/config.inc.php <<EOF
 \$cfg['SendErrorReports']                = 'never';
 \$cfg['ShowDatabasesNavigationAsTree']   = false;
 EOF
-
 chmod 0755 /var/www/myadmin
 find /var/www/myadmin/. -type d -exec chmod 0777 {} \;
 find /var/www/myadmin/. -type f -exec chmod 0644 {} \;
 chown -R www-data: /var/www/myadmin
-fi
 
 # phpPgAdmin
+if [ -d /var/www/pgadmin ]; then rm -fr /var/www/pgadmin ; fi
 project="https://api.github.com/repos/phppgadmin/phppgadmin/releases/latest"
 latest_release=`curl -s $project | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'`
 curl -fsSL https://github.com/phppgadmin/phppgadmin/archive/$latest_release.zip | bsdtar -xvf- -C /tmp
 mv /tmp/phppgadmin-$latest_release /var/www/pgadmin
-
 cat > /var/www/pgadmin/conf/config.inc.php <<EOF
 <?php @ini_set('display_errors', '0');
 \$conf['servers'][0]['desc']            = 'PostgreSQL';
@@ -131,29 +125,14 @@ cat > /var/www/pgadmin/conf/config.inc.php <<EOF
 \$conf['max_rows']                      = 30;
 \$conf['max_chars']                     = 50;
 \$conf['use_xhtml_strict']              = false;
-\$conf['help_base']                     = 'http://www.postgresql.org/docs/%s/interactive/';
 \$conf['ajax_refresh']                  = 3;
 \$conf['plugins']                       = array();
 \$conf['version']                       = 19;
 EOF
-
 chmod 0755 /var/www/pgadmin
 find /var/www/pgadmin/. -type d -exec chmod 0777 {} \;
 find /var/www/pgadmin/. -type f -exec chmod 0644 {} \;
 chown -R www-data: /var/www/pgadmin
 
-# Development libraries: non-root user
-yarn global add expo-cli electron firebase-tools serve git-upload vsce gatsby next-express-bootstrap-boilerplate
-composer global require hirak/prestissimo friendsofphp/php-cs-fixer laravel/installer wp-cli/wp-cli
-
-# Add Yarn and Composer to path
-if ! grep -q 'Composer' $HOME/.bashrc ; then
-    touch "$HOME/.bashrc"
-    {
-        echo ''
-        echo '# Composer and Yarn'
-        echo 'export PATH=$PATH:$HOME/.config/composer/vendor/bin:$HOME/.yarn/bin'
-        echo ''
-    } >> "$HOME/.bashrc"
-    source "$HOME/.bashrc"
-fi
+# Golang: install globally
+bash $PWD/setup-golang.sh 1.11.4
