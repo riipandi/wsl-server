@@ -54,7 +54,8 @@ service mysql restart ; mysql -uroot -psecret -e "drop database if exists test;"
 # PostgreSQL
 echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && apt update
-apt install -y postgresql-{11,client-11} pgcli ; service postgresql --full-restart
+apt install -y postgresql-{11,client-11} pgcli
+service postgresql --full-restart
 sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'secret'"
 
 # Install Nginx + PHP-FPM + Python3
@@ -71,7 +72,11 @@ find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display
 crudini --set /etc/php/5.6/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9056'
 crudini --set /etc/php/7.2/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9072'
 crudini --set /etc/php/7.3/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9073'
-service php5.6-fpm restart ; service php7.2-fpm restart ; service php7.3-fpm restart
+
+if [ ! -d /run/php ]; then mkdir -p /run/php ; fi
+service php5.6-fpm restart
+service php7.2-fpm restart
+service php7.3-fpm restart
 
 # Configuring Nginx
 if [ ! -d /mnt/d/Workspace/Webdir ]; then mkdir -p /mnt/d/Workspace/Webdir ; fi
