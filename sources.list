@@ -1,0 +1,5 @@
+# Change with closest mirror from your location
+deb http://kartolo.sby.datautama.net.id/ubuntu bionic main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu bionic-updates main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu bionic-security main restricted universe multiverse
+deb http://kartolo.sby.datautama.net.id/ubuntu bionic-proposed main restricted universe multiverse

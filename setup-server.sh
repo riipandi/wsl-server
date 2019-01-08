@@ -9,7 +9,9 @@ PWD=$(dirname "$(readlink -f "$0")")
 if [[ $EUID -ne 0 ]]; then echo -e 'This script must be run as root' ; exit 1 ; fi
 
 # Development packages
-apt install -y apt-transport-https curl git crudini pwgen s3cmd binutils dnsutils zip unzip bsdtar rsync screenfetch
+cat $PWD/sources.list > /etc/apt/sources.list ; apt update ; apt full-upgrade -y
+apt install -y apt-transport-https debconf-utils curl git crudini pwgen s3cmd binutils
+apt install -y dnsutils zip unzip bsdtar rsync screenfetch
 
 # Set Git user information
 read -ep "Your Full Name     ? " fullname
@@ -28,14 +30,26 @@ sed -i "s/[#]*ListenAddress/ListenAddress/" /etc/ssh/sshd_config
 sed -i "s/[#]*Port [0-9]*/Port 22/" /etc/ssh/sshd_config
 service ssh --full-restart
 
-# Install MariaDB
-echo "deb http://mirror.jaleco.com/mariadb/repo/10.3/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/mariadb.list
-apt-key adv --recv-keys --keyserver keyserver.ubuntu.com C74CD1D8 && apt update
+# MySQL 8.0
+echo "deb http://repo.mysql.com/apt/ubuntu/ `lsb_release -cs` mysql-8.0" > /etc/apt/sources.list.d/mysql.list
+echo "deb http://repo.mysql.com/apt/ubuntu/ `lsb_release -cs` mysql-tools" >> /etc/apt/sources.list.d/mysql.list
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 5072E1F5 && apt update
 
-debconf-set-selections <<< "mysql-server mysql-server/root_password password secret"
-debconf-set-selections <<< "mysql-server mysql-server/root_password_again password secret"
-apt install -y mariadb-server mariadb-client mycli
-service mysql --full-restart
+debconf-set-selections <<< "mysql-community-server mysql-community-server/root-pass password secret"
+debconf-set-selections <<< "mysql-community-server mysql-community-server/re-root-pass password secret"
+debconf-set-selections <<< "mysql-community-server mysql-server/default-auth-override select Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)"
+debconf-set-selections <<< "mysql-community-server mysql-community-server/remove-data-dir boolean false"
+apt install -y mysql-server mysql-client mycli ; usermod -d /var/lib/mysql/ mysql ; systemctl disable mysql
+cp $PWD/mysql-init.sh /etc/init.d/mysql ; chmod +x /etc/init.d/mysql
+
+rm -f /etc/mysql/mysql.conf.d/default-auth-override.cnf
+crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'default-authentication-plugin' 'mysql_native_password'
+crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'innodb_use_native_aio' '0'
+crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'bind-address' '127.0.0.1'
+crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'port' '3306'
+crudini --set /etc/mysql/conf.d/mysql.cnf 'mysql' 'host' '127.0.0.1'
+crudini --set /etc/mysql/conf.d/mysql.cnf 'mysql' 'port' '3306'
+service mysql restart ; mysql -uroot -psecret -e "drop database if exists test;"
 
 # PostgreSQL
 echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
