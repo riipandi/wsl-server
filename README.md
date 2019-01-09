@@ -12,7 +12,8 @@
 ## Quick Start
 
 You will need [Ubuntu WSL](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q) installed
-and also [hosts manager](http://www.abelhadigital.com/hostsman/) for managing Windows hosts file.
+and also [Hosts Manager](http://www.abelhadigital.com/hostsman/) or 
+[HostsFileEditor](https://github.com/scottlerch/HostsFileEditor) for managing Windows hosts file.
 
 ```
 # Clone this repo
