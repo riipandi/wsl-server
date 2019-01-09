@@ -5,22 +5,22 @@ if [[ $EUID -ne 0 ]]; then echo -e 'This script must be run as root' ; exit 1 ; 
 # Run server daemon in background
 
 echo "Starting php5.6-fpm..."
-service php5.6-fpm --full-restart
+service php5.6-fpm restart
 
 echo "Starting php7.2-fpm..."
-service php7.2-fpm --full-restart
+service php7.2-fpm restart
 
 echo "Starting php7.3-fpm..."
-service php7.3-fpm --full-restart
+service php7.3-fpm restart
 
 echo "Starting nginx..."
-service nginx --full-restart
+service nginx restart
 
 echo "Starting mysql server..."
-service mysql --full-restart
+service mysql restart
 
 echo "Starting postgresql server..."
-service postgresql --full-restart
+service postgresql restart
 
 echo "Starting redis server..."
-service redis-server --full-restart
+service redis-server restart
