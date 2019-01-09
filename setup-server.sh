@@ -8,8 +8,13 @@ PWD=$(dirname "$(readlink -f "$0")")
 
 if [[ $EUID -ne 0 ]]; then echo -e 'This script must be run as root' ; exit 1 ; fi
 
+read -ep "Do you want to change repository mirror? [Y/n] " answer
+if [[ "${answer,,}" =~ ^(yes|y)$ ]] ; then
+  cat $PWD/sources.list > /etc/apt/sources.list
+fi
+
 # Development packages
-cat $PWD/sources.list > /etc/apt/sources.list ; apt update ; apt full-upgrade -y
+apt update ; apt full-upgrade -y
 apt install -y apt-transport-https debconf-utils curl git crudini pwgen s3cmd binutils
 apt install -y dnsutils zip unzip bsdtar rsync screenfetch
 
