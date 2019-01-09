@@ -51,3 +51,7 @@ if [ -d "$GOROOT" ]; then
         echo "GOPATH set to $GOPATH"
     fi
 fi
+
+# SSH Keys
+mkdir -p $HOME/.ssh ; chmod 0700 $_
+touch $HOME/.ssh/id_rsa ; chmod 0600 $_
