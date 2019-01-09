@@ -14,6 +14,20 @@
 You will need [Ubuntu WSL](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q) installed
 and also [hosts manager](http://www.abelhadigital.com/hostsman/) for managing Windows hosts file.
 
+```
+# Clone this repo
+git clone https://github.com/riipandi/wsl-server ; cd $_
+
+# Make all script executable
+chmod +x *.sh
+
+# Setup the packages
+sudo ./setup-server.sh
+
+# As non-root user execute:
+./setup-devlib.sh
+```
+
 ## License
 
 This program is free software: you can distribute it and or modify it according to the license provided.
