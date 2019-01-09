@@ -22,7 +22,7 @@ git clone https://github.com/riipandi/wsl-server
 cd wsl-server ; chmod +x *.sh
 
 # Setup the packages
-sudo ./setup-server.sh
+sudo su -c "./setup-server.sh"
 
 # As non-root user execute:
 ./setup-devlib.sh
