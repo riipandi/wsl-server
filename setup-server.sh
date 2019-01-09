@@ -152,6 +152,12 @@ find /var/www/pgadmin/. -type d -exec chmod 0777 {} \;
 find /var/www/pgadmin/. -type f -exec chmod 0644 {} \;
 chown -R www-data: /var/www/pgadmin
 
+# Set default PHP version
+update-alternatives --set php /usr/bin/php7.2 >/dev/null 2>&1
+update-alternatives --set phar /usr/bin/phar7.2 >/dev/null 2>&1
+update-alternatives --set phar.phar /usr/bin/phar.phar7.2 >/dev/null 2>&1
+phpenmod curl imagick fileinfo ; phpdismod opcache
+
 # Golang: install globally
 bash $PWD/setup-golang.sh 1.11.4
 
