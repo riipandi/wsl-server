@@ -149,3 +149,10 @@ chown -R www-data: /var/www/pgadmin
 
 # Golang: install globally
 bash $PWD/setup-golang.sh 1.11.4
+
+# Copy snippets to local bin
+cp $PWD/start-server.sh /usr/local/bin/wsld-start
+cp $PWD/stop-server.sh /usr/local/bin/wsld-stop
+cp $PWD/vhost-create.sh /usr/local/bin/vc
+cp $PWD/vhost-delete.sh /usr/local/bin/vd
+chown root: /usr/local/bin/*
