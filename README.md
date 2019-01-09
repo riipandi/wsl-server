@@ -16,10 +16,10 @@ and also [hosts manager](http://www.abelhadigital.com/hostsman/) for managing Wi
 
 ```
 # Clone this repo
-git clone https://github.com/riipandi/wsl-server ; cd $_
+git clone https://github.com/riipandi/wsl-server
 
 # Make all script executable
-chmod +x *.sh
+cd wsl-server ; chmod +x *.sh
 
 # Setup the packages
 sudo ./setup-server.sh
