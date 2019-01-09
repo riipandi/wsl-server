@@ -39,7 +39,7 @@ debconf-set-selections <<< "mysql-community-server mysql-community-server/re-roo
 debconf-set-selections <<< "mysql-community-server mysql-server/default-auth-override select Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)"
 debconf-set-selections <<< "mysql-community-server mysql-community-server/remove-data-dir boolean false"
 apt install -y mysql-server mysql-client mycli ; usermod -d /var/lib/mysql/ mysql ; systemctl disable mysql
-cp $PWD/mysql-init.sh /etc/init.d/mysql ; chmod +x /etc/init.d/mysql
+cp $PWD/service-mysql.sh /etc/init.d/mysql ; chmod +x /etc/init.d/mysql
 
 rm -f /etc/mysql/mysql.conf.d/default-auth-override.cnf
 crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'default-authentication-plugin' 'mysql_native_password'
@@ -63,7 +63,8 @@ echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu `lsb_release -cs` main" > /
 apt-key adv --recv-keys --keyserver keyserver.ubuntu.com E5267A6C && apt update
 
 apt install -y php5.6 php{5.6,7.2,7.3}-{bcmath,cgi,cli,common,curl,fpm,gd,gmp,imap,intl,json,mbstring,mysql,opcache,pgsql,readline,sqlite3,xml,xmlrpc,zip,zip}
-apt install -y php7.3-imagick php-pear composer gettext gamin mcrypt imagemagick nginx {python,python3}-{dev,pip,virtualenv} python-pip-whl virtualenv redis-server
+apt install -y php7.3-imagick php-pear composer gettext gamin mcrypt imagemagick nginx redis-server {python,python3}-{dev,pip,virtualenv}
+apt install -y python-pip-whl virtualenv gunicorn
 pip install pipenv ; pip3 install pipenv
 service redis-server --full-restart
 
@@ -73,6 +74,8 @@ crudini --set /etc/php/7.2/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9072'
 crudini --set /etc/php/7.3/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9073'
 
 if [ ! -d /run/php ]; then mkdir -p /run/php ; fi
+if [ ! -d /var/run/php ]; then mkdir -p /var/run/php ; fi
+
 service php5.6-fpm restart
 service php7.2-fpm restart
 service php7.3-fpm restart
@@ -166,4 +169,5 @@ cp $PWD/start-server.sh /usr/local/bin/wsld-restart
 cp $PWD/stop-server.sh /usr/local/bin/wsld-stop
 cp $PWD/vhost-create.sh /usr/local/bin/vc
 cp $PWD/vhost-delete.sh /usr/local/bin/vd
+cp $PWD/vhost-proxy.sh /usr/local/bin/vd
 chown root: /usr/local/bin/*

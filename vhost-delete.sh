@@ -11,6 +11,11 @@ if [[ -f "/etc/nginx/vhost.d/$1.conf" ]]; then
         sed -i "s/127.0.0.1 $1//" /etc/hosts
     fi
     service nginx reload
+    if [[ -f "/etc/supervisor/conf.d/$1.conf" ]]; then
+        rm -f /etc/supervisor/conf.d/$1.conf
+        supervisorctl reread
+        service supervisor restart
+    fi
     echo " * VirtualHost $1 removed..."
 else
     echo " * VirtualHost $1 doesn't exists..."
