@@ -168,8 +168,9 @@ phpenmod curl imagick fileinfo ; phpdismod opcache
 bash $PWD/setup-golang.sh 1.11.4
 
 # Copy snippets to local bin
-cp $PWD/start-server.sh /usr/local/bin/wsld-restart
-cp $PWD/stop-server.sh /usr/local/bin/wsld-stop
+cp $PWD/server-restart.sh /usr/local/bin/server-restart
+cp $PWD/server-start.sh /usr/local/bin/server-start
+cp $PWD/server-stop.sh /usr/local/bin/server-stop
 cp $PWD/vhost-create.sh /usr/local/bin/vc
 cp $PWD/vhost-delete.sh /usr/local/bin/vd
 cp $PWD/vhost-proxy.sh /usr/local/bin/vd
