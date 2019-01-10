@@ -177,3 +177,7 @@ mkdir -p $HOME/.ssh ; chmod 0700 $_
 touch $HOME/.ssh/id_rsa ; chmod 0600 $_
 touch $HOME/.ssh/authorized_keys ; chmod 0600 $_
 
+# Cleaning up
+apt autoremove -y
+apt clean
+
