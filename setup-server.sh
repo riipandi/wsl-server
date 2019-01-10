@@ -68,6 +68,9 @@ apt install -y python-pip-whl virtualenv gunicorn
 pip install pipenv ; pip3 install pipenv
 service redis-server --full-restart
 
+echo "Error 404" > /usr/share/nginx/html/404.html
+echo "Error 50x" > /usr/share/nginx/html/50x.html
+
 find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display_errors" "On"' {} \;
 crudini --set /etc/php/5.6/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9056'
 crudini --set /etc/php/7.2/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9072'
