@@ -16,11 +16,11 @@ service php7.3-fpm stop
 echo "Stopping nginx..."
 service nginx stop
 
-echo "Stopping mysql server..."
-service mysql stop
+# echo "Stopping mysql server..."
+# service mysql stop
 
-echo "Stopping postgresql server..."
-service postgresql stop
+# echo "Stopping postgresql server..."
+# service postgresql stop
 
 echo "Stopping redis server..."
 service redis-server stop
