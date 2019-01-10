@@ -171,3 +171,9 @@ cp $PWD/vhost-create.sh /usr/local/bin/vc
 cp $PWD/vhost-delete.sh /usr/local/bin/vd
 cp $PWD/vhost-proxy.sh /usr/local/bin/vd
 chown root: /usr/local/bin/*
+
+# Setup SSH Key
+mkdir -p $HOME/.ssh ; chmod 0700 $_
+touch $HOME/.ssh/id_rsa ; chmod 0600 $_
+touch $HOME/.ssh/authorized_keys ; chmod 0600 $_
+
