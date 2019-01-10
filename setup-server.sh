@@ -30,32 +30,32 @@ sed -i "s/[#]*Port [0-9]*/Port 22/" /etc/ssh/sshd_config
 service ssh --full-restart
 
 # MySQL 8.0
-echo "deb http://repo.mysql.com/apt/ubuntu/ `lsb_release -cs` mysql-8.0" > /etc/apt/sources.list.d/mysql.list
-echo "deb http://repo.mysql.com/apt/ubuntu/ `lsb_release -cs` mysql-tools" >> /etc/apt/sources.list.d/mysql.list
-apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 5072E1F5 && apt update
+# echo "deb http://repo.mysql.com/apt/ubuntu/ `lsb_release -cs` mysql-8.0" > /etc/apt/sources.list.d/mysql.list
+# echo "deb http://repo.mysql.com/apt/ubuntu/ `lsb_release -cs` mysql-tools" >> /etc/apt/sources.list.d/mysql.list
+# apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 5072E1F5 && apt update
 
-debconf-set-selections <<< "mysql-community-server mysql-community-server/root-pass password secret"
-debconf-set-selections <<< "mysql-community-server mysql-community-server/re-root-pass password secret"
-debconf-set-selections <<< "mysql-community-server mysql-server/default-auth-override select Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)"
-debconf-set-selections <<< "mysql-community-server mysql-community-server/remove-data-dir boolean false"
-apt install -y mysql-server mysql-client mycli ; usermod -d /var/lib/mysql/ mysql ; systemctl disable mysql
-cp $PWD/service-mysql.sh /etc/init.d/mysql ; chmod +x /etc/init.d/mysql
+# debconf-set-selections <<< "mysql-community-server mysql-community-server/root-pass password secret"
+# debconf-set-selections <<< "mysql-community-server mysql-community-server/re-root-pass password secret"
+# debconf-set-selections <<< "mysql-community-server mysql-server/default-auth-override select Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)"
+# debconf-set-selections <<< "mysql-community-server mysql-community-server/remove-data-dir boolean false"
+# apt install -y mysql-server mysql-client mycli ; usermod -d /var/lib/mysql/ mysql ; systemctl disable mysql
+# cp $PWD/service-mysql.sh /etc/init.d/mysql ; chmod +x /etc/init.d/mysql
 
-rm -f /etc/mysql/mysql.conf.d/default-auth-override.cnf
-crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'default-authentication-plugin' 'mysql_native_password'
-crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'innodb_use_native_aio' '0'
-crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'bind-address' '127.0.0.1'
-crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'port' '3306'
-crudini --set /etc/mysql/conf.d/mysql.cnf 'mysql' 'host' '127.0.0.1'
-crudini --set /etc/mysql/conf.d/mysql.cnf 'mysql' 'port' '3306'
-service mysql restart ; mysql -uroot -psecret -e "drop database if exists test;"
+# rm -f /etc/mysql/mysql.conf.d/default-auth-override.cnf
+# crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'default-authentication-plugin' 'mysql_native_password'
+# crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'innodb_use_native_aio' '0'
+# crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'bind-address' '127.0.0.1'
+# crudini --set /etc/mysql/mysql.conf.d/mysqld.cnf 'mysqld' 'port' '3306'
+# crudini --set /etc/mysql/conf.d/mysql.cnf 'mysql' 'host' '127.0.0.1'
+# crudini --set /etc/mysql/conf.d/mysql.cnf 'mysql' 'port' '3306'
+# service mysql restart ; mysql -uroot -psecret -e "drop database if exists test;"
 
 # PostgreSQL
-echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && apt update
-apt install -y postgresql-{11,client-11} pgcli
-service postgresql --full-restart
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'secret'"
+# echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+# curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && apt update
+# apt install -y postgresql-{11,client-11} pgcli
+# service postgresql --full-restart
+# sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'secret'"
 
 # Install Nginx + PHP-FPM + Python3
 echo "deb http://ppa.launchpad.net/ondrej/nginx/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/nginx.list
