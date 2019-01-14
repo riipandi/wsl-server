@@ -16,7 +16,6 @@ if ! grep -q 'Composer' $HOME/.bashrc ; then
         echo 'export PATH=$PATH:$HOME/.config/composer/vendor/bin:$HOME/.yarn/bin'
         echo ''
     } >> "$HOME/.bashrc"
-    source "$HOME/.bashrc"
 fi
 
 echo "Instaling NPM packages..."
@@ -49,3 +48,4 @@ mkdir -p $HOME/.ssh ; chmod 0700 $_
 touch $HOME/.ssh/id_rsa ; chmod 0600 $_
 touch $HOME/.ssh/id_rsa.pub ; chmod 0600 $_
 touch $HOME/.ssh/authorized_keys ; chmod 0600 $_
+source "$HOME/.bashrc"
