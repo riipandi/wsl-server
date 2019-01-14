@@ -7,15 +7,16 @@ if [[ $EUID -ne 0 ]]; then echo 'This script must be run as root!' ; exit 1 ; fi
 
 PWD=$(dirname "$(readlink -f "$0")")
 
-[[ -d /mnt/d/ ]] && WORKSPACE="/mnt/d/Workspace" || WORKSPACE="/mnt/c/Workspace"
+[[ -d "/mnt/d/" ]] && WORKSPACE="/mnt/d/Workspace" || WORKSPACE="/mnt/c/Workspace"
 
-# Copy snippets to local bin
-# ----------------------------------------------------------------------------------
+# Passwordless sudo and setup snippets
+#---------------------------------------------------------------------------------------
+perl -pi -e 's#(.*sudo.*ALL=)(.*)#${1}(ALL) NOPASSWD:ALL#' /etc/sudoers
 chmod +x $PWD/snippets/* ; cp $PWD/snippets/* /usr/local/bin ; chown root: /usr/local/bin/*
 
 # Keep packages up to date
-# ----------------------------------------------------------------------------------
-echo "Change repository mirror ..."
+#---------------------------------------------------------------------------------------
+echo "Updating system packages ..."
 COUNTRY=$(wget -qO- ipapi.co/json | grep '"country":' | sed -E 's/.*"([^"]+)".*/\1/')
 
 if [ $COUNTRY == "ID" ] ; then
@@ -25,6 +26,7 @@ elif [ $COUNTRY == "SG" ] ; then
 else
     MIRROR="mirror://mirrors.ubuntu.com/mirrors.txt"
 fi
+
 MIRROR=$(echo $MIRROR | awk '{ gsub("[/]","\\/",$1); print $1 }')
 {
     echo "deb MIRROR CODENAME main restricted universe multiverse"
@@ -36,54 +38,24 @@ sed -i "s/MIRROR/$MIRROR/" /etc/apt/sources.list
 sed -i "s/CODENAME/$(lsb_release -cs)/" /etc/apt/sources.list
 
 # Install basic packages
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 apt update ; apt full-upgrade -y
 apt install -y apt-transport-https debconf-utils curl crudini pwgen s3cmd binutils
-apt install -y dnsutils zip unzip bsdtar rsync screenfetch
-
-# Basic configuration
-# ----------------------------------------------------------------------------------
-perl -pi -e 's#(.*sudo.*ALL=)(.*)#${1}(ALL) NOPASSWD:ALL#' /etc/sudoers
-sed -i "s|\("^PubkeyAuthentication" * *\).*|\1yes|" /etc/ssh/sshd_config
-sed -i "s|\("^PasswordAuthentication" * *\).*|\1yes|" /etc/ssh/sshd_config
-sed -i "s|\("^UsePrivilegeSeparation" * *\).*|\1yes|" /etc/ssh/sshd_config
-sed -i "s|\("^ListenAddress" * *\).*|\10.0.0.0|" /etc/ssh/sshd_config
-sed -i "s|\("^PermitRootLogin" * *\).*|\1no|" /etc/ssh/sshd_config
-sed -i "s/[#]*ListenAddress/ListenAddress/" /etc/ssh/sshd_config
-sed -i "s/[#]*Port [0-9]*/Port 22/" /etc/ssh/sshd_config
-service ssh --full-restart
-
-# PostgreSQL
-# ----------------------------------------------------------------------------------
-echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
-curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && apt update
-apt install -y postgresql-{11,client-11} pgcli && service postgresql restart
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'secret'"
+apt install -y dnsutils zip unzip bsdtar rsync screenfetch git
 
 # Install Nginx + PHP-FPM + Python3
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 echo "deb http://ppa.launchpad.net/ondrej/nginx/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/nginx.list
 echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/sury-php.list
-apt-key adv --recv-keys --keyserver keyserver.ubuntu.com E5267A6C && apt update
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com E5267A6C ; apt update
 
 apt install -y php5.6 php{5.6,7.2,7.3}-{bcmath,cgi,cli,common,curl,fpm,gd,gmp,imap,intl,json,mbstring,mysql,opcache,pgsql,readline,sqlite3,xml,xmlrpc,zip,zip}
-apt install -y php7.3-imagick php-pear composer gettext gamin mcrypt imagemagick nginx redis-server {python,python3}-{dev,pip,virtualenv}
-apt install -y python-pip-whl virtualenv gunicorn && pip install pipenv ; pip3 install pipenv
-service redis-server restart
-
-# Configure PHP-FPM
-# ----------------------------------------------------------------------------------
-find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display_errors" "On"' {} \;
-crudini --set /etc/php/5.6/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9056'
-crudini --set /etc/php/7.2/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9072'
-crudini --set /etc/php/7.3/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9073'
-mkdir -p /run/php /var/run/php /var/www
-service php5.6-fpm restart
-service php7.2-fpm restart
-service php7.3-fpm restart
+apt install -y php7.3-imagick php-pear composer gettext gamin mcrypt imagemagick nginx redis-server {python,python3}-{dev,pip,virtualenv} virtualenv gunicorn
+pip install pipenv ; pip3 install pipenv
 
 # Configuring Nginx
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
+[[ -d /var/www ]] || mkdir -p /var/www
 [[ -d $WORKSPACE/Webdir ]] || mkdir -p $WORKSPACE/Webdir
 curl -sL https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt -o /etc/ssl/certs/chain.pem
 curl -sL https://2ton.com.au/dhparam/4096 -o /etc/ssl/certs/dhparam-4096.pem
@@ -91,18 +63,36 @@ rm -fr /etc/nginx ; cp -r $PWD/nginx /etc/ ; service nginx restart
 cp /etc/nginx/manifest/default.php /var/www/index.php
 cp /etc/nginx/errpage/* /usr/share/nginx/html/
 
+# Configure PHP-FPM
+#---------------------------------------------------------------------------------------
+find /etc/php/. -name 'php.ini' -exec bash -c 'crudini --set "$0" "PHP" "display_errors" "On"' {} \;
+crudini --set /etc/php/5.6/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9056'
+crudini --set /etc/php/7.2/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9072'
+crudini --set /etc/php/7.3/fpm/pool.d/www.conf  'www' 'listen' '127.0.0.1:9073'
+
+mkdir -p /run/php /var/run/php
+service php5.6-fpm restart
+service php7.2-fpm restart
+service php7.3-fpm restart
+service redis-server restart
+
+# Set default PHP version
+#---------------------------------------------------------------------------------------
+update-alternatives --set php /usr/bin/php7.2 >/dev/null 2>&1
+update-alternatives --set phar /usr/bin/phar7.2 >/dev/null 2>&1
+update-alternatives --set phar.phar /usr/bin/phar.phar7.2 >/dev/null 2>&1
+phpenmod curl imagick fileinfo ; phpdismod opcache
+
 # Nodejs + Yarn
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 echo "deb https://deb.nodesource.com/node_10.x `lsb_release -cs` main" > /etc/apt/sources.list.d/nodejs.list
-curl -sS https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
-
 echo 'deb https://dl.yarnpkg.com/debian/ stable main' > /etc/apt/sources.list.d/yarn.list
+curl -sS https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add -
 curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-
 apt update ; apt install -y nodejs yarn
 
 # phpMyAdmin
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 [[ -d /var/www/myadmin ]] || mkdir -p /var/www/myadmin
 curl -fsSL https://phpmyadmin.net/downloads/phpMyAdmin-latest-english.zip | bsdtar -xvf-
 mv $PWD/phpMyAdmin*-english /var/www/myadmin
@@ -125,7 +115,7 @@ find /var/www/myadmin/. -type f -exec chmod 0644 {} \;
 chown -R www-data: /var/www/myadmin
 
 # phpPgAdmin
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 [[ -d /var/www/pgadmin ]] || mkdir -p /var/www/pgadmin
 project="https://api.github.com/repos/phppgadmin/phppgadmin/releases/latest"
 latest_release=`curl -s $project | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'`
@@ -163,15 +153,8 @@ find /var/www/pgadmin/. -type d -exec chmod 0777 {} \;
 find /var/www/pgadmin/. -type f -exec chmod 0644 {} \;
 chown -R www-data: /var/www/pgadmin
 
-# Set default PHP version
-# ----------------------------------------------------------------------------------
-update-alternatives --set php /usr/bin/php7.2 >/dev/null 2>&1
-update-alternatives --set phar /usr/bin/phar7.2 >/dev/null 2>&1
-update-alternatives --set phar.phar /usr/bin/phar.phar7.2 >/dev/null 2>&1
-phpenmod curl imagick fileinfo ; phpdismod opcache
-
 # Golang: install globally
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 GOROOT="/usr/local/go"
 GOPATH="$WORKSPACE/Goland"
 GO_URL='https://dl.google.com/go/go[0-9\.]+\.linux-amd64.tar.gz'
@@ -220,7 +203,7 @@ chmod 777 "$GOPATH" "$GOPATH/src" "$GOPATH/pkg" "$GOPATH/bin" "$GOPATH/out"
 echo "GOPATH set to $GOPATH" ; source "$HOME/.bashrc"
 
 # Buffalo Framework
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 echo "Downloading Buffalo Framework ..."
 project="https://api.github.com/repos/gobuffalo/buffalo/releases/latest"
 release=`curl -s $project | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'`
@@ -229,8 +212,29 @@ wget -qO- $download_link | tar xvz -C /tmp
 cp /tmp/buffalo-no-sqlite /usr/local/bin/buffalo
 chmod +x /usr/local/bin/buffalo
 
+# PostgreSQL
+#---------------------------------------------------------------------------------------
+read -ep "Do you want to install PostgreSQL 11 ?   [Y/n] " answer
+if [[ "${answer,,}" =~ ^(yes|y)$ ]] ; then
+    echo "deb https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+    curl -sS https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && apt update
+    apt install -y postgresql-{11,client-11} pgcli && service postgresql restart
+    sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'secret'"
+fi
+
+# SSH server configuration
+#---------------------------------------------------------------------------------------
+sed -i "s|\("^PubkeyAuthentication" * *\).*|\1yes|" /etc/ssh/sshd_config
+sed -i "s|\("^PasswordAuthentication" * *\).*|\1yes|" /etc/ssh/sshd_config
+sed -i "s|\("^UsePrivilegeSeparation" * *\).*|\1yes|" /etc/ssh/sshd_config
+sed -i "s|\("^ListenAddress" * *\).*|\10.0.0.0|" /etc/ssh/sshd_config
+sed -i "s|\("^PermitRootLogin" * *\).*|\1no|" /etc/ssh/sshd_config
+sed -i "s/[#]*ListenAddress/ListenAddress/" /etc/ssh/sshd_config
+sed -i "s/[#]*Port [0-9]*/Port 22/" /etc/ssh/sshd_config
+service ssh --full-restart
+
 # Setup SSH Key
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 mkdir -p $HOME/.ssh ; chmod 0700 $_
 touch $HOME/.ssh/id_rsa ; chmod 0600 $_
 touch $HOME/.ssh/id_rsa.pub ; chmod 0600 $_
@@ -240,5 +244,5 @@ touch $HOME/.ssh/authorized_keys ; chmod 0600 $_
 # runuser -l $ADMIN -c 'yarn global add ghost-cli@latest'
 
 # Cleaning up
-# ----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------
 apt full-upgrade -y ; apt autoremove -y ; apt clean

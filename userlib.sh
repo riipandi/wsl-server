@@ -20,7 +20,7 @@ if ! grep -q 'Composer' $HOME/.bashrc ; then
 fi
 
 echo "Instaling NPM packages..."
-yarn global add firebase-tools serve gatsby ghost-cli@latest
+yarn global add eslint firebase-tools serve gatsby ghost-cli@latest
 
 # Add Golang to path
 GOROOT="/usr/local/go"
@@ -49,4 +49,3 @@ mkdir -p $HOME/.ssh ; chmod 0700 $_
 touch $HOME/.ssh/id_rsa ; chmod 0600 $_
 touch $HOME/.ssh/id_rsa.pub ; chmod 0600 $_
 touch $HOME/.ssh/authorized_keys ; chmod 0600 $_
-
