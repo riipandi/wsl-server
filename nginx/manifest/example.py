@@ -18,7 +18,7 @@ class QuoteResource:
                 "This is an example application "
                 "using Python and Nginx reverse proxy."
             ),
-            'author': 'Aris Ripandi <ripandi@pm.me>',
+            'author': 'Aris Ripandi <aris@ripandi.id>',
         }
         resp.media = result
 

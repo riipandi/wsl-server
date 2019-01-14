@@ -39,7 +39,7 @@ sed -i "s/CODENAME/$(lsb_release -cs)/" /etc/apt/sources.list
 # ----------------------------------------------------------------------------------
 apt update ; apt full-upgrade -y
 apt install -y apt-transport-https debconf-utils curl crudini pwgen s3cmd binutils
-apt install -y dnsutils zip unzip bsdtar rsync screenfetch nmap
+apt install -y dnsutils zip unzip bsdtar rsync screenfetch
 
 # Basic configuration
 # ----------------------------------------------------------------------------------
@@ -242,5 +242,3 @@ touch $HOME/.ssh/authorized_keys ; chmod 0600 $_
 # Cleaning up
 # ----------------------------------------------------------------------------------
 apt full-upgrade -y ; apt autoremove -y ; apt clean
-# nmap -PN localhost
-# nmap -n -PN -sT -sU -p- localhost
