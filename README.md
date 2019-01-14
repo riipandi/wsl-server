@@ -12,7 +12,7 @@
 ## Quick Start
 
 You will need [Ubuntu WSL](https://www.microsoft.com/en-us/p/ubuntu-1804-lts/9n9tngvndl3q) installed
-and also [Hosts Manager](http://www.abelhadigital.com/hostsman/) or 
+and also [Hosts Manager](http://www.abelhadigital.com/hostsman/) or
 [HostsFileEditor](https://github.com/scottlerch/HostsFileEditor) for managing Windows hosts file.
 
 ```
@@ -20,13 +20,15 @@ and also [Hosts Manager](http://www.abelhadigital.com/hostsman/) or
 git clone https://github.com/riipandi/wsl-server
 
 # Make all script executable
-cd wsl-server ; chmod +x *.sh
+cd wsl-server
+find . -type f -name '*.sh' -exec chmod +x {} \;
+find . -type f -name '.git*' -exec rm -fr {} \;
 
-# Setup the packages
-sudo su -c "./setup-server.sh"
+# Run setup
+sudo ./setup.sh
 
-# As non-root user execute:
-./setup-devlib.sh
+# As non-root:
+bash userlib.sh
 ```
 
 ## License

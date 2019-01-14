@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
-set -e
+if [[ ! $EUID -ne 0 ]]; then echo -e 'Please do NOT run this script with sudo, run it as your own user!' ; exit 1 ; fi
 
-if [[ ! $EUID -ne 0 ]]; then echo -e 'This script must be run as non-root user' ; exit 1 ; fi
-
-# Set Git user information
-echo
-read -ep "Your Full Name     ? " fullname
-read -ep "Your Email Address ? " mailaddr
-git config --global user.name  "$fullname"
-git config --global user.email "$mailaddr"
-git config --global core.autocrlf input
-echo
+[[ -d /mnt/d/ ]] && WORKSPACE="/mnt/d/Workspace" || WORKSPACE="/mnt/c/Workspace"
 
 echo "Instaling Composer packages..."
 composer global require hirak/prestissimo friendsofphp/php-cs-fixer laravel/installer wp-cli/wp-cli
@@ -29,11 +20,11 @@ if ! grep -q 'Composer' $HOME/.bashrc ; then
 fi
 
 echo "Instaling NPM packages..."
-yarn global add expo-cli electron firebase-tools serve git-upload vsce gatsby next-express-bootstrap-boilerplate
+yarn global add firebase-tools serve gatsby ghost-cli@latest
 
 # Add Golang to path
 GOROOT="/usr/local/go"
-GOPATH="/mnt/d/Workspace/Goland"
+GOPATH="$WORKSPACE/Goland"
 if [ -d "$GOROOT" ]; then
     if ! grep -q 'GOPATH' $HOME/.bashrc ; then
         touch "$HOME/.bashrc"
@@ -52,6 +43,10 @@ if [ -d "$GOROOT" ]; then
     fi
 fi
 
-# SSH Keys
+# Setup SSH Key
+# ----------------------------------------------------------------------------------
 mkdir -p $HOME/.ssh ; chmod 0700 $_
 touch $HOME/.ssh/id_rsa ; chmod 0600 $_
+touch $HOME/.ssh/id_rsa.pub ; chmod 0600 $_
+touch $HOME/.ssh/authorized_keys ; chmod 0600 $_
+
